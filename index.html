@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>지각 변동</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  :root { --ink:#2b1d52; --yellow:#ffd23f; --pink:#ff5fa2; --muted:#6b5c95; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:linear-gradient(180deg, #2f6a8a 0%, #1d4660 55%, #0f2a3d 100%); font-family:'Jua', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color:#fff; touch-action:manipulation; }
+  #stage { width:100%; height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px; }
+  #col { width:min(100%, 520px); display:flex; flex-direction:column; align-items:center; gap:8px; }
+  #hud { display:flex; align-items:center; gap:6px; width:100%; font-variant-numeric:tabular-nums; color:var(--ink); }
+  #hud .item { display:flex; align-items:center; gap:5px; white-space:nowrap; background:#fff; border:3px solid var(--ink); border-radius:999px; box-shadow:0 4px 0 var(--ink); padding:2px 12px; height:38px; }
+  #hud .item.score { background:var(--yellow); flex:1; min-width:0; } #hud .item.you .value { color:#1f6fe0; } #hud .item.cpu .value { color:#e63946; }
+  #hud .label { font-size:11px; color:var(--muted); } #hud .value { font-size:19px; }
+  #hud .icons { margin-left:auto; } #hud button { background:#fff; border:3px solid var(--ink); color:var(--ink); width:36px; height:36px; border-radius:12px; font-size:15px; cursor:pointer; box-shadow:0 4px 0 var(--ink); }
+  #wrap { position:relative; width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  #boardBox { position:relative; width:100%; aspect-ratio:var(--ar, 1.6); background:#0b2233; border:4px solid var(--ink); border-radius:14px; box-shadow:0 5px 0 var(--ink); overflow:hidden; }
+  #board { display:block; width:100%; height:100%; touch-action:manipulation; }
+  #msg { min-height:36px; font-size:15px; text-align:center; text-shadow:0 2px 0 rgba(0,0,0,.4); padding:0 6px; line-height:1.4; }
+  #tools { display:flex; gap:8px; justify-content:center; } #tools button { font:inherit; font-size:16px; color:var(--ink); background:#fff; border:3px solid var(--ink); border-radius:999px; box-shadow:0 4px 0 var(--ink); padding:6px 18px; cursor:pointer; } #tools button:disabled { opacity:.45; }
+  #overlay { position:absolute; inset:0; z-index:40; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:10px; text-align:center; padding:14px; background:rgba(9,25,38,.95); overflow-y:auto; touch-action:pan-y; }
+  #overlay.hidden { display:none; }
+  #overlay h1, #overlay h2 { color:#fff; font-weight:400; paint-order:stroke fill; -webkit-text-stroke:6px var(--ink); text-shadow:0 5px 0 var(--ink); } #overlay h1 { font-size:clamp(30px, 8vw, 44px); line-height:1.05; color:var(--yellow); } #overlay h2 { font-size:28px; }
+  #overlay p { font-size:13px; line-height:1.6; } #overlay p b { color:var(--yellow); font-weight:400; }
+  #overlay .stats { display:grid; grid-template-columns:auto auto; gap:3px 16px; font-size:15px; } #overlay .stats dt { color:#b9d0e0; text-align:right; } #overlay .stats dd { text-align:left; }
+  #overlay .col { display:flex; flex-direction:column; align-items:center; gap:8px; } #overlay .row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  #overlay button { background:var(--yellow); color:var(--ink); font-size:18px; font-family:inherit; border:3px solid var(--ink); border-radius:999px; padding:7px 24px; box-shadow:0 5px 0 var(--ink); cursor:pointer; }
+  #overlay button.sub { background:#fff; font-size:14px; padding:5px 18px; box-shadow:0 4px 0 var(--ink); } #overlay button small { display:block; font-size:10px; color:var(--muted); } #overlay button:active { transform:translateY(4px); box-shadow:0 1px 0 var(--ink); }
+  @media (max-width:420px) { #hud .label { display:none; } } @media (max-height:700px) { #col { gap:5px; } #overlay h1 { font-size:28px; } #overlay p { font-size:12px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="col">
+    <div id="hud">
+      <div class="item score"><span class="label">타일</span><span class="value" id="tilesN">84</span></div>
+      <div class="item you"><span class="label">내 말</span><span class="value" id="myN">5</span></div>
+      <div class="item cpu"><span class="label">컴퓨터 말</span><span class="value" id="cpuN">5</span></div>
+      <div class="icons"><button id="muteBtn" title="소리 (M)">🔊</button></div>
+    </div>
+    <div id="wrap">
+      <div id="boardBox"><canvas id="board"></canvas><div id="overlay"></div></div>
+      <div id="msg"></div>
+      <div id="tools"><button id="cancelBtn" disabled>선택 취소</button></div>
+    </div>
+  </div>
+</div>
+<script src="logic.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
